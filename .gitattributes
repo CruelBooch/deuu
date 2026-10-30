@@ -1,0 +1,15 @@
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary
+*.icns binary
+*.jsonl binary
+*.apk binary
+*.exe binary
+*.keystore binary
+*.docx binary
+*.zip binary
+
+*.bat text eol=crlf
+*.cmd text eol=crlf

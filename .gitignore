@@ -1,0 +1,38 @@
+# 依赖与构建产物
+node_modules/
+out/
+dist/
+release/
+.electron-cache/
+.electron-builder-cache/
+.pnpm-store/
+.tmp/
+
+# 本机专用脚本（含本机 Node 路径），贡献者用 pnpm dev
+dev.cmd
+
+# 日志与系统文件
+*.log
+startup.log
+.DS_Store
+Thumbs.db
+
+# electron-builder 资源目录：只保留打包必需的图标
+build/*
+!build/icon.ico
+
+# Android
+android/.gradle/
+android/build/
+android/app/build/
+android/app/release/
+android/local.properties
+android/app/*.keystore
+android/app/deuu-release.keystore
+android/keystore.properties
+*.jks
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
