@@ -244,10 +244,10 @@ export default function App(): JSX.Element {
     [handleSubmit]
   )
 
+  // 设置页是「改完即存」，保存后留在原页，不要跳回词典
   const handleSaveSettings = useCallback(async (next: Settings) => {
     await window.api.saveSettings(next)
     setSettings(next)
-    setPage('search')
   }, [])
 
   const handleSelectHistory = useCallback((entry: HistoryEntry) => {

@@ -47,9 +47,11 @@ export default function SettingsView({
     applyTheme(theme, accent)
   }, [theme, accent])
 
+  // 离开设置页时恢复为「已保存」的主题（用 ref 取最新值，避免拿到挂载时的旧设置）
   useEffect(() => {
     return () => {
-      applyTheme(settings.theme ?? 'auto', settings.accent || DEFAULT_ACCENT)
+      const saved = savedRef.current
+      applyTheme(saved.theme ?? 'auto', saved.accent || DEFAULT_ACCENT)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -57,8 +59,9 @@ export default function SettingsView({
   // 修改即保存：不再需要"保存"按钮，防抖 500ms 落盘
   useEffect(() => {
     const timer = setTimeout(() => {
+      const saved = savedRef.current
       const next = {
-        ...savedRef.current,
+        ...saved,
         apiKey: apiKey.trim(),
         baseUrl: baseUrl.trim() || DEFAULT_BASE_URL,
         model: model.trim() || DEFAULT_MODEL,
@@ -66,6 +69,15 @@ export default function SettingsView({
         theme,
         accent
       }
+      // 与已保存的值一致就什么都不做：进入设置页本身不会触发保存
+      const unchanged =
+        next.apiKey === saved.apiKey.trim() &&
+        next.baseUrl === (saved.baseUrl || DEFAULT_BASE_URL).trim() &&
+        next.model === (saved.model || DEFAULT_MODEL).trim() &&
+        next.offlineFirst === (saved.offlineFirst !== false) &&
+        next.theme === (saved.theme ?? 'auto') &&
+        next.accent === (saved.accent || DEFAULT_ACCENT)
+      if (unchanged) return
       void Promise.resolve(onSave(next)).catch(() => undefined)
       setMessage('已自动保存')
       setTimeout(() => setMessage(null), 1400)
