@@ -13,7 +13,8 @@
     "typecheck:web": "tsc --noEmit -p tsconfig.json",
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
     "check:core": "node scripts/check-core.mjs",
-    "verify": "npm run typecheck && npm run check:core",
+    "check:knowledge": "node scripts/check-knowledge.mjs",
+    "verify": "npm run typecheck && npm run check:core && npm run check:knowledge",
     "package:win": "electron-vite build && electron-builder --win",
     "publish": "node scripts/publish-dist.mjs"
   },
