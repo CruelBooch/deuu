@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import ConfirmDialog from './ConfirmDialog'
 import type { VocabEntry } from '../../../shared/types'
 
 export const NONE_GROUP = '__none__'
@@ -42,6 +43,13 @@ export default function VocabView({
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [dragId, setDragId] = useState<string | null>(null)
   const [dragOverId, setDragOverId] = useState<string | null>(null)
+  const [pending, setPending] = useState<
+    | { kind: 'one'; id: string; label: string }
+    | { kind: 'batch'; ids: string[] }
+    | { kind: 'clear' }
+    | { kind: 'group'; name: string }
+    | null
+  >(null)
 
   // 切换分组 / 列表变化时清空选择
   useEffect(() => {
@@ -64,9 +72,37 @@ export default function VocabView({
 
   function deleteSelected(): void {
     if (selected.size === 0) return
-    onDeleteMany(Array.from(selected))
-    setSelected(new Set())
+    setPending({ kind: 'batch', ids: Array.from(selected) })
   }
+
+  function confirmPending(): void {
+    if (!pending) return
+    if (pending.kind === 'one') {
+      onRemove(pending.id)
+    } else if (pending.kind === 'batch') {
+      onDeleteMany(pending.ids)
+      setSelected(new Set())
+    } else if (pending.kind === 'clear') {
+      onClear()
+    } else if (pending.kind === 'group') {
+      onDeleteGroup(pending.name)
+    }
+    setPending(null)
+  }
+
+  const dialog =
+    pending?.kind === 'one'
+      ? { title: '移出生词本？', message: `「${pending.label}」将从生词本移除，之后还可以重新收藏。` }
+      : pending?.kind === 'batch'
+        ? { title: `删除选中的 ${pending.ids.length} 个单词？`, message: '删除后无法恢复。' }
+        : pending?.kind === 'clear'
+          ? { title: '清空整个生词本？', message: `将删除全部 ${total} 个单词，删除后无法恢复。分组会保留。` }
+          : pending?.kind === 'group'
+            ? {
+                title: `删除分组「${pending.name}」？`,
+                message: '组内的单词会保留，回到「未分组」。'
+              }
+            : null
 
   function commit(): void {
     const value = name.trim()
@@ -94,7 +130,7 @@ export default function VocabView({
           </button>
         )}
         {total > 0 && !selectMode && (
-          <button className="vocab-clear" type="button" onClick={onClear}>
+          <button className="vocab-clear" type="button" onClick={() => setPending({ kind: 'clear' })}>
             清空
           </button>
         )}
@@ -123,7 +159,7 @@ export default function VocabView({
             <button
               className="vocab-group-x"
               type="button"
-              onClick={() => onDeleteGroup(g)}
+              onClick={() => setPending({ kind: 'group', name: g })}
               title="删除分组"
               aria-label="删除分组"
             >
@@ -168,7 +204,7 @@ export default function VocabView({
 
       {selectMode && (
         <div className="vocab-batch-bar">
-          <span className="vocab-batch-count">已选 {selected.size}</span>
+          <span className="vocab-batch-count">已选 {selected.size} / {items.length}</span>
           <button className="vocab-batch-btn" type="button" onClick={selectAll}>
             {selected.size === items.length && items.length > 0 ? '取消全选' : '全选'}
           </button>
@@ -298,7 +334,7 @@ export default function VocabView({
                 <button
                   className="vocab-del"
                   type="button"
-                  onClick={() => onRemove(v.id)}
+                  onClick={() => setPending({ kind: 'one', id: v.id, label: v.word })}
                   title="移出生词本"
                   aria-label="移出生词本"
                 >
@@ -309,6 +345,16 @@ export default function VocabView({
           })}
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!pending}
+        title={dialog?.title ?? ''}
+        message={dialog?.message}
+        confirmText="删除"
+        danger
+        onConfirm={confirmPending}
+        onCancel={() => setPending(null)}
+      />
     </div>
   )
 }

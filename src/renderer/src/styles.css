@@ -2863,7 +2863,7 @@ body {
 /* ---- 移动端悬浮历史按钮（替代顶部栏） ---- */
 .mobile-history-fab {
   position: fixed;
-  top: calc(env(safe-area-inset-top) + 10px);
+  top: calc(var(--status-h, env(safe-area-inset-top)) + 10px);
   right: 12px;
   z-index: 60;
   width: 38px;
@@ -2887,7 +2887,7 @@ body {
 
 /* 内容从状态栏下方开始 */
 .app.mobile .main {
-  padding-top: env(safe-area-inset-top);
+  padding-top: var(--status-h, env(safe-area-inset-top));
 }
 
 /* 生词本右上角让出悬浮按钮的位置 */
@@ -2981,4 +2981,722 @@ body {
 .article-actions .article-toggle {
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+
+/* 状态栏遮罩：内容向上滚动时从下面穿过，用毛玻璃盖住，避免和系统图标重叠 */
+.app.mobile::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--status-h, env(safe-area-inset-top));
+  background: color-mix(in srgb, var(--bg) 74%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  backdrop-filter: blur(14px) saturate(150%);
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* ============ 确认弹窗 ============ */
+.confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.42);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  animation: fadeIn 0.14s var(--ease) both;
+}
+
+.confirm-card {
+  width: 100%;
+  max-width: 320px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px 20px 16px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+  animation: fadeInUp 0.18s var(--ease) both;
+}
+
+.confirm-title {
+  margin: 0 0 8px;
+  font-size: 15.5px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.confirm-message {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-soft);
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.confirm-btn {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 9px 18px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-soft);
+  cursor: pointer;
+  transition: filter 0.14s var(--ease);
+}
+
+.confirm-btn:hover {
+  filter: brightness(0.97);
+}
+
+.confirm-btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+}
+
+.confirm-btn.danger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+
+/* 触摸设备没有 hover，历史记录的删除按钮常驻显示 */
+@media (hover: none) {
+  .history-item-del {
+    opacity: 1;
+  }
+}
+
+.app.mobile .history-item-del {
+  opacity: 1;
+}
+
+/* 批量操作栏吸顶，长列表滚动时仍可操作 */
+.vocab-batch-bar {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+/* 锁定状态下的设置输入框 */
+.field-input:disabled {
+  color: var(--text-faint);
+  background: color-mix(in srgb, var(--card) 60%, var(--bg));
+  cursor: not-allowed;
+}
+
+.field-label-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.field-lock-btn {
+  margin-left: auto;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-soft);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 10px;
+  cursor: pointer;
+}
+
+.field-lock-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.unlock-warn {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, var(--border));
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.unlock-warn-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.unlock-warn-actions button {
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text-soft);
+  cursor: pointer;
+}
+
+.unlock-warn-actions button.danger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+
+.lock-hint-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lock-reset-btn {
+  margin-left: auto;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--accent);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.lock-reset-btn:hover {
+  text-decoration: underline;
+}
+
+/* ============ 文本选择策略 ============ */
+/* 界面元素默认不可选中，只有正文区域允许划词复制 */
+.app {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+input,
+textarea,
+[contenteditable='true'] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* 查词/翻译结果、语法正文、文章正文、背记卡允许复制 */
+.result-panel,
+.result-panel *,
+.grammar-detail,
+.grammar-detail *,
+.article-card,
+.article-card *,
+.flash-card,
+.flash-card *,
+.quiz-card,
+.quiz-card * {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* 按钮与导航保持不可选（特异性高于上面） */
+.app button,
+.app button *,
+.app .nav-item,
+.app .nav-item *,
+.app .learning-tab,
+.app .grammar-level,
+.app .mobile-tab,
+.app .history-item {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* ============ 历史记录滚动 ============ */
+/* 条目不再被压缩，列表放满后自身滚动 */
+.history-item,
+.history-group {
+  flex-shrink: 0;
+}
+
+.history-list {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* ============ 背记卡 ============ */
+.flash-hint {
+  margin: 0 0 12px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-faint);
+}
+
+.flash-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.flash-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.flash-main {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.flash-de {
+  font-size: 14.5px;
+  font-weight: 650;
+  color: var(--text);
+}
+
+.flash-zh {
+  font-size: 12.5px;
+  color: var(--text-soft);
+}
+
+.flash-detail {
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.flash-add {
+  flex-shrink: 0;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-soft);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.flash-add:hover:not(:disabled) {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.flash-add.saved {
+  color: var(--text-faint);
+  opacity: 0.7;
+  cursor: default;
+}
+
+/* ============ 练习自测 ============ */
+.quiz-modes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quiz-mode {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  padding: 14px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.14s var(--ease);
+}
+
+.quiz-mode:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.quiz-mode:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.quiz-mode-title {
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--text);
+}
+
+.quiz-mode-desc {
+  font-size: 12px;
+  color: var(--text-soft);
+}
+
+.quiz-progress {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-faint);
+  margin-bottom: 10px;
+}
+
+.quiz-score {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.quiz-card {
+  padding: 18px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.quiz-prompt {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.quiz-hint {
+  margin-top: 4px;
+  font-size: 12.5px;
+  color: var(--text-faint);
+}
+
+.quiz-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.quiz-option {
+  font-family: inherit;
+  font-size: 13.5px;
+  padding: 12px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.14s var(--ease);
+}
+
+.quiz-option:hover:not(.muted) {
+  border-color: var(--accent);
+}
+
+.quiz-option.correct {
+  background: color-mix(in srgb, #2f8f6b 18%, transparent);
+  border-color: #2f8f6b;
+  color: #2f8f6b;
+  font-weight: 650;
+}
+
+.quiz-option.wrong {
+  background: color-mix(in srgb, var(--danger) 16%, transparent);
+  border-color: var(--danger);
+  color: var(--danger);
+  font-weight: 650;
+}
+
+.quiz-option.muted {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.quiz-next {
+  margin-top: 16px;
+  width: 100%;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 650;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: var(--accent);
+  color: var(--bg);
+  cursor: pointer;
+}
+
+.quiz-result {
+  text-align: center;
+}
+
+.quiz-result-score {
+  font-size: 34px;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.quiz-result-text {
+  margin: 8px 0 18px;
+  font-size: 13px;
+  color: var(--text-soft);
+}
+
+.quiz-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.quiz-actions .quiz-next {
+  margin-top: 0;
+}
+
+.quiz-back {
+  flex: 1;
+  font-family: inherit;
+  font-size: 13.5px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-soft);
+  cursor: pointer;
+}
+
+/* ============ 设置自动保存提示 ============ */
+.settings-autosave {
+  display: flex;
+  justify-content: flex-end;
+  min-height: 20px;
+  margin-top: 12px;
+  font-size: 12px;
+}
+
+.settings-saved {
+  color: #2f8f6b;
+  font-weight: 600;
+}
+
+.settings-saved-idle {
+  color: var(--text-faint);
+}
+
+@media (max-width: 420px) {
+  .quiz-options {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============ 学堂：模块列表 ============ */
+.module-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.module-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  padding: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.14s var(--ease), background 0.14s var(--ease);
+}
+
+.module-card:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.module-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.module-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.module-title {
+  font-size: 15px;
+  font-weight: 650;
+  color: var(--text);
+}
+
+.module-desc {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-soft);
+}
+
+.module-arrow {
+  flex-shrink: 0;
+  color: var(--text-faint);
+}
+
+/* 进入模块后的标题栏 */
+.module-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.module-back {
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--text-soft);
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.module-back:hover {
+  color: var(--accent);
+}
+
+.module-head-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* ============ 自测：范围选择与手写输入 ============ */
+.quiz-range {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.quiz-range-label {
+  font-size: 12.5px;
+  color: var(--text-soft);
+  white-space: nowrap;
+}
+
+.quiz-range-select {
+  flex: 1;
+  min-width: 0;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--text);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 8px 10px;
+  outline: none;
+}
+
+.quiz-range-select:focus {
+  border-color: var(--accent);
+}
+
+.quiz-input-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.quiz-input {
+  flex: 1;
+  min-width: 0;
+  font-family: inherit;
+  font-size: 16px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  outline: none;
+}
+
+.quiz-input:focus {
+  border-color: var(--accent);
+}
+
+.quiz-input:disabled {
+  opacity: 0.7;
+}
+
+.quiz-submit {
+  flex-shrink: 0;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 650;
+  padding: 0 20px;
+  border-radius: 10px;
+  border: none;
+  background: var(--accent);
+  color: var(--bg);
+  cursor: pointer;
+}
+
+.quiz-submit:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.quiz-verdict {
+  margin-top: 14px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.quiz-verdict.ok {
+  color: #2f8f6b;
+}
+
+.quiz-verdict.bad {
+  color: var(--danger);
+}
+
+.quiz-remove {
+  width: 100%;
+  margin-bottom: 12px;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 11px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, var(--border));
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
+  color: var(--danger);
+  cursor: pointer;
+}
+
+.quiz-remove:hover {
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
 }

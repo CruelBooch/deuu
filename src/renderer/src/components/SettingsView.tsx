@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { AppInfo, Settings } from '../../../shared/types'
 import { applyTheme, DEFAULT_ACCENT, type ThemeMode } from '../lib'
 import { IconArrowLeft, IconEye, IconEyeOff } from './icons'
@@ -19,6 +19,10 @@ const ACCENTS: Array<{ hex: string; name: string }> = [
   { hex: '#4a4a4a', name: '石墨' }
 ]
 
+/** 接口地址与模型的默认值：默认锁定，改动需二次确认 */
+const DEFAULT_BASE_URL = 'https://api.deepseek.com/v1'
+const DEFAULT_MODEL = 'deepseek-chat'
+
 export default function SettingsView({
   settings,
   appInfo,
@@ -32,9 +36,11 @@ export default function SettingsView({
   const [theme, setTheme] = useState<ThemeMode>(settings.theme ?? 'auto')
   const [accent, setAccent] = useState(settings.accent || DEFAULT_ACCENT)
   const [showKey, setShowKey] = useState(false)
-  const [saving, setSaving] = useState(false)
+  const [unlocked, setUnlocked] = useState(false)
+  const [askUnlock, setAskUnlock] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
-  const [isError, setIsError] = useState(false)
+  const savedRef = useRef(settings)
+  savedRef.current = settings
 
   // 实时预览主题；离开设置页时恢复为已保存的主题
   useEffect(() => {
@@ -48,31 +54,25 @@ export default function SettingsView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  async function handleSave(): Promise<void> {
-    setSaving(true)
-    setMessage(null)
-    setIsError(false)
-    try {
-      if (!apiKey.trim()) throw new Error('请填写 API Key')
-      if (!baseUrl.trim()) throw new Error('请填写接口地址')
-      if (!model.trim()) throw new Error('请填写模型名称')
-      await onSave({
+  // 修改即保存：不再需要"保存"按钮，防抖 500ms 落盘
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const next = {
+        ...savedRef.current,
         apiKey: apiKey.trim(),
-        baseUrl: baseUrl.trim(),
-        model: model.trim(),
+        baseUrl: baseUrl.trim() || DEFAULT_BASE_URL,
+        model: model.trim() || DEFAULT_MODEL,
         offlineFirst,
         theme,
         accent
-      })
-      setMessage('设置已保存')
-      setIsError(false)
-    } catch (e) {
-      setMessage(e instanceof Error ? e.message : String(e))
-      setIsError(true)
-    } finally {
-      setSaving(false)
-    }
-  }
+      }
+      void Promise.resolve(onSave(next)).catch(() => undefined)
+      setMessage('已自动保存')
+      setTimeout(() => setMessage(null), 1400)
+    }, 500)
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiKey, baseUrl, model, offlineFirst, theme, accent])
 
   return (
     <div className="settings">
@@ -113,40 +113,103 @@ export default function SettingsView({
         </div>
 
         <div className="field">
-          <label className="field-label" htmlFor="baseUrl">
-            接口地址 · Base URL
-          </label>
+          <div className="field-label-row">
+            <label className="field-label" htmlFor="baseUrl">
+              接口地址 · Base URL
+            </label>
+            <button
+              className="field-lock-btn"
+              type="button"
+              onClick={() => {
+                if (unlocked) setUnlocked(false)
+                else setAskUnlock(true)
+              }}
+            >
+              {unlocked ? '锁定' : '修改'}
+            </button>
+          </div>
           <input
             id="baseUrl"
             className="field-input"
             type="text"
             value={baseUrl}
             onChange={(e) => setBaseUrl(e.target.value)}
-            placeholder="https://api.deepseek.com/v1"
+            placeholder={DEFAULT_BASE_URL}
             autoComplete="off"
             spellCheck={false}
+            disabled={!unlocked}
           />
         </div>
 
         <div className="field">
-          <label className="field-label" htmlFor="model">
-            模型 · Model
-          </label>
+          <div className="field-label-row">
+            <label className="field-label" htmlFor="model">
+              模型 · Model
+            </label>
+            <button
+              className="field-lock-btn"
+              type="button"
+              onClick={() => {
+                if (unlocked) setUnlocked(false)
+                else setAskUnlock(true)
+              }}
+            >
+              {unlocked ? '锁定' : '修改'}
+            </button>
+          </div>
           <input
             id="model"
             className="field-input"
             type="text"
             value={model}
             onChange={(e) => setModel(e.target.value)}
-            placeholder="deepseek-chat"
+            placeholder={DEFAULT_MODEL}
             autoComplete="off"
             spellCheck={false}
+            disabled={!unlocked}
           />
         </div>
 
-        <span className="field-hint">
-          兼容任何 OpenAI 接口：DeepSeek / OpenAI / 通义千问 / 智谱等。只需填对地址与模型名。
-        </span>
+        {askUnlock && (
+          <div className="unlock-warn">
+            接口地址和模型一般不需要改。填错会导致所有 AI 功能失效，出现「模型不存在」或「连接失败」之类的错误。
+            <div className="unlock-warn-actions">
+              <button type="button" onClick={() => setAskUnlock(false)}>
+                算了
+              </button>
+              <button
+                type="button"
+                className="danger"
+                onClick={() => {
+                  setAskUnlock(false)
+                  setUnlocked(true)
+                }}
+              >
+                我确定，解锁
+              </button>
+            </div>
+          </div>
+        )}
+
+        {unlocked ? (
+          <div className="lock-hint-row">
+            <span className="field-hint">已解锁，修改后自动保存。</span>
+            <button
+              className="lock-reset-btn"
+              type="button"
+              onClick={() => {
+                setBaseUrl(DEFAULT_BASE_URL)
+                setModel(DEFAULT_MODEL)
+              }}
+            >
+              恢复默认
+            </button>
+          </div>
+        ) : (
+          <span className="field-hint">
+            默认锁定。兼容任何 OpenAI 接口：DeepSeek / OpenAI / 通义千问 / 智谱等。
+          </span>
+        )}
 
         <div className="settings-divider" />
 
@@ -214,18 +277,9 @@ export default function SettingsView({
           <span className="field-hint">应用于按钮、链接、高亮和选中态</span>
         </div>
 
-        <div className="settings-actions">
-          <button className="btn-secondary" type="button" onClick={onBack}>
-            取消
-          </button>
-          <button className="btn-primary" type="button" onClick={handleSave} disabled={saving}>
-            {saving ? '保存中…' : '保存'}
-          </button>
+        <div className="settings-autosave">
+          {message ? <span className="settings-saved">{message}</span> : <span className="settings-saved-idle">修改会自动保存</span>}
         </div>
-
-        {message && (
-          <div className={`settings-message${isError ? ' error' : ''}`}>{message}</div>
-        )}
 
         <div className="about-card">
           <div className="about-row">

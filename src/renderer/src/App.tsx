@@ -15,12 +15,15 @@ import Sidebar from './components/Sidebar'
 import type { Page } from './components/Sidebar'
 import HistoryPanel from './components/HistoryPanel'
 import VocabView, { NONE_GROUP } from './components/VocabView'
-import GrammarView from './components/GrammarView'
-import ReadingView from './components/ReadingView'
+import StudyView from './components/StudyView'
 import TitleBar from './components/TitleBar'
 import MobileTabs from './components/MobileTabs'
 import { IconAlert, IconHistory } from './components/icons'
 import { applyTheme, DEFAULT_ACCENT } from './lib'
+import { triggerBack } from './backBus'
+import { useEdgeSwipe } from './useEdgeSwipe'
+import { initStatusBar, syncStatusBarStyle } from './platform/statusBar'
+import { minimizeApp, onHardwareBack } from './platform/backButton'
 import { useMediaQuery } from './hooks/useMediaQuery'
 import appIcon from './assets/app-icon.png'
 
@@ -129,15 +132,42 @@ export default function App(): JSX.Element {
   useEffect(() => {
     const theme = settings?.theme ?? 'auto'
     const accent = settings?.accent || DEFAULT_ACCENT
-    applyTheme(theme, accent)
+    const apply = (): void => {
+      applyTheme(theme, accent)
+      void syncStatusBarStyle()
+    }
+    apply()
     if (theme === 'auto') {
       const mq = window.matchMedia('(prefers-color-scheme: dark)')
-      const onChange = (): void => applyTheme('auto', accent)
+      const onChange = (): void => apply()
       mq.addEventListener('change', onChange)
       return () => mq.removeEventListener('change', onChange)
     }
     return undefined
   }, [settings?.theme, settings?.accent])
+
+  // 沉浸式状态栏（仅移动端生效）
+  useEffect(() => {
+    void initStatusBar()
+  }, [])
+
+  // 返回：先收弹层，再询问各页面，最后回到词典
+  const handleBack = useCallback((): void => {
+    if (sheetOpen) {
+      setSheetOpen(false)
+      return
+    }
+    if (triggerBack()) return
+    if (page !== 'search') {
+      setPage('search')
+      return
+    }
+    if (isMobile) minimizeApp()
+  }, [sheetOpen, page, isMobile])
+
+  useEdgeSwipe(handleBack, isMobile)
+
+  useEffect(() => onHardwareBack(handleBack), [handleBack])
 
   const saveVocabState = useCallback((items: VocabEntry[], groups: string[]) => {
     vocabRef.current = items
@@ -285,6 +315,23 @@ export default function App(): JSX.Element {
   const handleClearVocab = useCallback(() => {
     saveVocabState([], groupsRef.current)
   }, [saveVocabState])
+
+  const handleAddKnowledge = useCallback(
+    (item: { de: string; zh: string; pos: string }) => {
+      const word = item.de.trim()
+      if (!word) return
+      if (vocabRef.current.some((v) => v.word.toLowerCase() === word.toLowerCase())) return
+      const entry: VocabEntry = {
+        id: `kw-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        word,
+        pos: item.pos,
+        meanings: [item.zh],
+        ts: Date.now()
+      }
+      saveVocabState([entry, ...vocabRef.current], groupsRef.current)
+    },
+    [saveVocabState]
+  )
 
   const handleDeleteMany = useCallback(
     (ids: string[]) => {
@@ -504,9 +551,14 @@ export default function App(): JSX.Element {
             />
           )}
 
-          {page === 'grammar' && <GrammarView />}
-
-          {page === 'reading' && <ReadingView />}
+          {page === 'study' && (
+            <StudyView
+              vocab={vocab}
+              groups={vocabGroups}
+              onAddVocab={handleAddKnowledge}
+              onRemoveMany={handleDeleteMany}
+            />
+          )}
 
           {page === 'settings' && (
             <SettingsView

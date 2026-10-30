@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import CopyButton from './CopyButton'
 import { IconSparkle } from './icons'
 import type { ArticleLevel, ArticleRequest, ArticleResult } from '../../../shared/types'
@@ -32,7 +32,7 @@ function articleToText(a: ArticleResult): string {
   return lines.join('\n').trim()
 }
 
-export default function ReadingView(): JSX.Element {
+export default function ReadingPanel(): JSX.Element {
   const [level, setLevel] = useState<ArticleLevel>('A2')
   const [topic, setTopic] = useState('校园生活')
   const [words, setWords] = useState(180)
@@ -88,12 +88,7 @@ export default function ReadingView(): JSX.Element {
   }
 
   return (
-    <div className="learning">
-      <div className="learning-head">
-        <h2 className="learning-title">阅读</h2>
-        <span className="learning-sub">AI 生成德语短文 · 可反复修改</span>
-      </div>
-
+    <div>
       <div className="reading-form">
         <div className="reading-row">
           <span className="reading-label">难度</span>
@@ -269,3 +264,4 @@ export default function ReadingView(): JSX.Element {
     </div>
   )
 }
+

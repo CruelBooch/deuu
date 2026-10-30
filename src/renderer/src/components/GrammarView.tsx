@@ -1,12 +1,13 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { GRAMMAR_TOPICS } from '../../../core/grammar'
+import { registerBackHandler } from '../backBus'
 import type { GrammarTopic } from '../../../shared/types'
 
 type LevelFilter = 'all' | 'A1' | 'A2' | 'B1' | 'B2' | 'C1'
 
 const GRAMMAR_FILTERS: LevelFilter[] = ['all', 'A1', 'A2', 'B1', 'B2', 'C1']
 
-export default function GrammarView(): JSX.Element {
+export default function GrammarPanel(): JSX.Element {
   const [level, setLevel] = useState<LevelFilter>('all')
   const [openId, setOpenId] = useState<string | null>(null)
 
@@ -16,13 +17,17 @@ export default function GrammarView(): JSX.Element {
   )
   const open = openId ? GRAMMAR_TOPICS.find((t) => t.id === openId) : null
 
-  return (
-    <div className="learning">
-      <div className="learning-head">
-        <h2 className="learning-title">语法</h2>
-        <span className="learning-sub">离线语法手册 · 变位与变格表</span>
-      </div>
+  // 侧滑/返回键：详情页先退回列表
+  useEffect(() => {
+    if (!openId) return undefined
+    return registerBackHandler(() => {
+      setOpenId(null)
+      return true
+    })
+  }, [openId])
 
+  return (
+    <>
       {open ? (
         <GrammarDetail topic={open} onBack={() => setOpenId(null)} />
       ) : (
@@ -59,7 +64,7 @@ export default function GrammarView(): JSX.Element {
           </div>
         </>
       )}
-    </div>
+    </>
   )
 }
 

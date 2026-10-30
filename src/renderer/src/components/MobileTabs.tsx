@@ -1,5 +1,5 @@
 import type { Page } from './Sidebar'
-import { IconBook, IconBookOpen, IconPage, IconSearch, IconSettings } from './icons'
+import { IconBook, IconBookOpen, IconSearch, IconSettings } from './icons'
 
 interface Props {
   page: Page
@@ -9,8 +9,7 @@ interface Props {
 const TABS: Array<{ id: Page; label: string; icon: JSX.Element }> = [
   { id: 'search', label: '词典', icon: <IconSearch size={20} /> },
   { id: 'vocab', label: '生词本', icon: <IconBook size={20} /> },
-  { id: 'grammar', label: '语法', icon: <IconBookOpen size={20} /> },
-  { id: 'reading', label: '阅读', icon: <IconPage size={20} /> },
+  { id: 'study', label: '学堂', icon: <IconBookOpen size={20} /> },
   { id: 'settings', label: '设置', icon: <IconSettings size={20} /> }
 ]
 

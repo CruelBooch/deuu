@@ -3,12 +3,11 @@ import {
   IconBookOpen,
   IconChevronLeft,
   IconChevronRight,
-  IconPage,
   IconSearch,
   IconSettings
 } from './icons'
 
-export type Page = 'search' | 'vocab' | 'grammar' | 'reading' | 'settings'
+export type Page = 'search' | 'vocab' | 'study' | 'settings'
 
 interface Props {
   page: Page
@@ -26,8 +25,7 @@ interface NavItem {
 const TOP_ITEMS: NavItem[] = [
   { id: 'search', label: '词典 · 翻译', icon: <IconSearch /> },
   { id: 'vocab', label: '生词本', icon: <IconBook /> },
-  { id: 'grammar', label: '语法', icon: <IconBookOpen /> },
-  { id: 'reading', label: '阅读', icon: <IconPage /> }
+  { id: 'study', label: '学堂', icon: <IconBookOpen /> }
 ]
 
 export default function Sidebar({
