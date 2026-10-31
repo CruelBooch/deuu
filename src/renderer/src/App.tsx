@@ -25,6 +25,7 @@ import { useEdgeSwipe } from './useEdgeSwipe'
 import { initStatusBar, syncStatusBarStyle } from './platform/statusBar'
 import { minimizeApp, onHardwareBack } from './platform/backButton'
 import { useMediaQuery } from './hooks/useMediaQuery'
+import { IS_DESKTOP_SHELL } from './platform/shell'
 import appIcon from './assets/app-icon.png'
 
 const HISTORY_LIMIT = 100
@@ -83,7 +84,15 @@ export default function App(): JSX.Element {
   const [historyOpen, setHistoryOpen] = useState(true)
   const [sheetOpen, setSheetOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const isMobile = useMediaQuery('(max-width: 640px)')
+  // 手机竖屏、以及横屏时高度很矮的情况都用单栏 + 底部 Tab；
+  // 平板和桌面才用三栏布局（横屏手机宽度会超过 640，单看宽度会误判）
+  const isMobile = useMediaQuery('(max-width: 640px), (max-height: 480px)')
+  // 窄屏（平板竖屏、小窗口）三栏会挤，默认把历史栏收起来，宽度让给正文
+  const isNarrow = useMediaQuery('(max-width: 900px)')
+
+  useEffect(() => {
+    if (isNarrow) setHistoryOpen(false)
+  }, [isNarrow])
 
   const [vocab, setVocab] = useState<VocabEntry[]>([])
   const [vocabGroups, setVocabGroups] = useState<string[]>([])
@@ -440,7 +449,7 @@ export default function App(): JSX.Element {
     result && result.type === 'dictionary' ? savedWords.has(result.word.toLowerCase()) : false
 
   return (
-    <div className={`app${isMobile ? ' mobile' : ''}`}>
+    <div className={`app${isMobile ? ' mobile' : ''}${IS_DESKTOP_SHELL ? '' : ' webview'}`}>
       {!isMobile && (
         <TitleBar
           historyOpen={historyOpen}

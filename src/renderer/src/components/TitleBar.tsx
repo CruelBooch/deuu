@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import appIcon from '../assets/app-icon.png'
+import { IS_DESKTOP_SHELL } from '../platform/shell'
 import {
   IconClose,
   IconHistory,
@@ -54,33 +55,37 @@ export default function TitleBar({ historyOpen, onToggleHistory, onHome }: Props
           <IconHistory size={16} />
         </button>
         <span className="titlebar-sep" aria-hidden="true" />
-        <button
-          className="titlebar-btn"
-          type="button"
-          onClick={() => window.api.windowMinimize()}
-          title="最小化"
-          aria-label="最小化"
-        >
-          <IconMinimize />
-        </button>
-        <button
-          className="titlebar-btn"
-          type="button"
-          onClick={toggleMaximize}
-          title={maximized ? '还原' : '最大化'}
-          aria-label={maximized ? '还原' : '最大化'}
-        >
-          {maximized ? <IconRestore /> : <IconMaximize />}
-        </button>
-        <button
-          className="titlebar-btn close"
-          type="button"
-          onClick={() => window.api.windowClose()}
-          title="关闭"
-          aria-label="关闭"
-        >
-          <IconClose />
-        </button>
+        {IS_DESKTOP_SHELL && (
+          <>
+            <button
+              className="titlebar-btn"
+              type="button"
+              onClick={() => window.api.windowMinimize()}
+              title="最小化"
+              aria-label="最小化"
+            >
+              <IconMinimize />
+            </button>
+            <button
+              className="titlebar-btn"
+              type="button"
+              onClick={toggleMaximize}
+              title={maximized ? '还原' : '最大化'}
+              aria-label={maximized ? '还原' : '最大化'}
+            >
+              {maximized ? <IconRestore /> : <IconMaximize />}
+            </button>
+            <button
+              className="titlebar-btn close"
+              type="button"
+              onClick={() => window.api.windowClose()}
+              title="关闭"
+              aria-label="关闭"
+            >
+              <IconClose />
+            </button>
+          </>
+        )}
       </div>
     </header>
   )

@@ -1,4 +1,4 @@
-﻿/* ============ 全局 ============ */
+/* ============ 全局 ============ */
 /* 去掉移动端点击时的灰色/蓝色高亮块（WebView 默认 tap highlight） */
 *,
 *::before,
@@ -2890,6 +2890,13 @@ body {
   padding-top: var(--status-h, env(safe-area-inset-top));
 }
 
+/* WebView 壳（Android / iOS / 鸿蒙）在平板与横屏上会走桌面三栏布局：
+   这里没有窗口可控制，但同样要让出状态栏，否则沉浸式下标题栏会压到系统图标 */
+.app.webview:not(.mobile) {
+  box-sizing: border-box;
+  padding-top: var(--status-h, env(safe-area-inset-top));
+}
+
 /* 生词本右上角让出悬浮按钮的位置 */
 .app.mobile .vocab-head {
   padding-right: 46px;
@@ -2985,7 +2992,7 @@ body {
 
 
 /* 状态栏遮罩：内容向上滚动时从下面穿过，用毛玻璃盖住，避免和系统图标重叠 */
-.app.mobile::before {
+.app.webview::before {
   content: '';
   position: fixed;
   top: 0;
