@@ -160,6 +160,25 @@ export default function App(): JSX.Element {
     void initStatusBar()
   }, [])
 
+  // 软键盘：Android 的 windowSoftInputMode 是 adjustNothing，窗口不会跟着键盘缩放，
+  // 这里跟 visualViewport 的高度对齐，避免下方输入框被键盘挡住。
+  // 键盘收起时 visualViewport 高度等于窗口高度，行为与 100% 一致。
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv) return
+    const root = document.documentElement
+    const sync = (): void => {
+      root.style.setProperty('--app-h', `${Math.round(vv.height)}px`)
+    }
+    sync()
+    vv.addEventListener('resize', sync)
+    vv.addEventListener('scroll', sync)
+    return () => {
+      vv.removeEventListener('resize', sync)
+      vv.removeEventListener('scroll', sync)
+    }
+  }, [])
+
   // 返回：先收弹层，再询问各页面，最后回到词典
   const handleBack = useCallback((): void => {
     if (sheetOpen) {

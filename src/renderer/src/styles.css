@@ -130,7 +130,8 @@ body {
 .app {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  /* 键盘弹出时由 --app-h（visualViewport 高度）接管，避免输入框被遮住 */
+  height: var(--app-h, 100%);
   background: var(--bg-glow), var(--bg);
   background-repeat: no-repeat;
 }
